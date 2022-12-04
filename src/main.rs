@@ -1,6 +1,6 @@
 use clap::{arg, Command};
-use rocksdb::{IteratorMode, DB};
-use todo_rust::{add_todo, complete_todo, delete_todo};
+use rocksdb::DB;
+use todo_rust::{add_todo, complete_todo, delete_todo, get_all_todos};
 
 fn main() {
     let path = "/Users/lyubokyuchukov";
@@ -11,48 +11,27 @@ fn main() {
     match matches.subcommand() {
         Some(("add", sub_matches)) => {
             let key = sub_matches.get_one::<String>("NAME").expect("required");
-            let res = db.get(key).unwrap();
-            match res.is_some() {
-                true => println!("TODO with name {} already exists", key),
-                false => {
-                    add_todo(&db, key);
-                }
+            if let Err(e) = add_todo(&db, &key) {
+                println!("{}", e);
             }
         }
         Some(("list", _)) => {
-            let iter = db.iterator(IteratorMode::Start);
-            for item in iter {
-                let (key, value) = item.unwrap();
-                println!(
-                    "{}: {}",
-                    String::from_utf8_lossy(&key),
-                    String::from_utf8_lossy(&value)
-                );
+            let todos = get_all_todos(&db);
+            for todo in todos {
+                println!("{:?}", todo);
             }
         }
         Some(("complete", sub_matches)) => {
             let key = sub_matches.get_one::<String>("NAME").expect("required");
-            let res = db.get(key).unwrap();
-            match res.is_some() {
-                true => {
-                    let val = String::from_utf8(res.unwrap()).unwrap();
-                    complete_todo(&db, &key, &val);
-                }
-                false => {
-                    println!("No TODO with name {}", key)
-                }
+            if let Err(e) = complete_todo(&db, &key) {
+                println!("{}", e);
             }
         }
         Some(("delete", sub_matches)) => {
             let key = sub_matches.get_one::<String>("NAME").expect("required");
-            let res = db.get(key).unwrap();
-            match res.is_some() {
-                true => {
-                    delete_todo(&db, &key);
-                }
-                false => {
-                    println!("No TODO with name {}", key)
-                }
+
+            if let Err(e) = delete_todo(&db, &key) {
+                println!("{}", e);
             }
         }
         _ => unreachable!(),
