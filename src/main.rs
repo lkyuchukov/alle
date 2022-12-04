@@ -1,18 +1,6 @@
 use clap::{arg, Command};
 use rocksdb::{IteratorMode, DB};
-use serde::{Deserialize, Serialize};
-
-#[derive(Serialize, Deserialize, Debug)]
-struct TODO {
-    status: Status,
-    notes: String,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-enum Status {
-    InProgress,
-    Done,
-}
+use todo_rust::{add_todo, complete_todo, delete_todo};
 
 fn main() {
     let path = "/Users/lyubokyuchukov";
@@ -27,7 +15,7 @@ fn main() {
             match res.is_some() {
                 true => println!("TODO with name {} already exists", key),
                 false => {
-                    fun_name(&db, key, sub_matches);
+                    add_todo(&db, key);
                 }
             }
         }
@@ -42,22 +30,33 @@ fn main() {
                 );
             }
         }
-
+        Some(("complete", sub_matches)) => {
+            let key = sub_matches.get_one::<String>("NAME").expect("required");
+            let res = db.get(key).unwrap();
+            match res.is_some() {
+                true => {
+                    let val = String::from_utf8(res.unwrap()).unwrap();
+                    complete_todo(&db, &key, &val);
+                }
+                false => {
+                    println!("No TODO with name {}", key)
+                }
+            }
+        }
+        Some(("delete", sub_matches)) => {
+            let key = sub_matches.get_one::<String>("NAME").expect("required");
+            let res = db.get(key).unwrap();
+            match res.is_some() {
+                true => {
+                    delete_todo(&db, &key);
+                }
+                false => {
+                    println!("No TODO with name {}", key)
+                }
+            }
+        }
         _ => unreachable!(),
     }
-}
-
-fn fun_name(db: &DB, key: &String, sub_matches: &clap::ArgMatches) {
-    let todo = TODO {
-        status: Status::InProgress,
-        notes: String::from("no notes for now"),
-    };
-    let serialized = serde_json::to_string(&todo).unwrap();
-    db.put(key, serialized).unwrap();
-    println!(
-        "Adding {}",
-        sub_matches.get_one::<String>("NAME").expect("required")
-    );
 }
 
 fn cli() -> Command {
@@ -73,4 +72,16 @@ fn cli() -> Command {
                 .arg_required_else_help(true),
         )
         .subcommand(Command::new("list").about("List all TODOs"))
+        .subcommand(
+            Command::new("complete")
+                .about("Complete a TODO")
+                .arg(arg!(<NAME> "The name of the todo"))
+                .arg_required_else_help(true),
+        )
+        .subcommand(
+            Command::new("delete")
+                .about("Delete a TODO")
+                .arg(arg!(<NAME> "The name of the todo"))
+                .arg_required_else_help(true),
+        )
 }
