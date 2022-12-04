@@ -1,5 +1,5 @@
 use rocksdb::{Options, DB};
-use todo_rust::{add_todo, complete_todo, delete_todo, get_all_todos, Status, Todo};
+use tman::{add_todo, complete_todo, delete_todo, get_all_todos, Status, Todo};
 use serial_test::serial;
 
 #[test]
@@ -21,6 +21,8 @@ fn test_add_todo() {
     }
 
     let _ = DB::destroy(&Options::default(), path);
+
+    // generate some good names for a terminal todo app
 }
 
 #[test]

@@ -1,10 +1,11 @@
 use clap::{arg, Command};
 use rocksdb::{DB};
-use todo_rust::{add_todo, complete_todo, delete_todo, drop_db, get_all_todos};
+use tman::{add_todo, complete_todo, delete_todo, drop_db, get_all_todos};
 
 fn main() {
-    let path = "/Users/lyubokyuchukov/todo-rust";
-    let db = DB::open_default(path).unwrap();
+    let binding = dirs::home_dir().unwrap();
+    let path = binding.to_str().unwrap().to_string() + "/.tman";
+    let db = DB::open_default(&path).unwrap();
 
     let matches = cli().get_matches();
 
@@ -35,7 +36,7 @@ fn main() {
             }
         }
         Some(("drop-db", _)) => {
-            if let Err(e) = drop_db(path) {
+            if let Err(e) = drop_db(&path) {
                 println!("{}", e);
             }
         }
