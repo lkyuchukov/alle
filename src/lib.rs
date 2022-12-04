@@ -1,10 +1,11 @@
-use std::{str::from_utf8, };
+use std::{fs, str::from_utf8};
 
-use rocksdb::{IteratorMode, DB};
+use rocksdb::{IteratorMode, Options, DB};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Todo {
+    pub name: String,
     pub status: Status,
     pub notes: String,
 }
@@ -22,6 +23,7 @@ pub fn add_todo(db: &DB, key: &String) -> Result<(), &'static str> {
     }
 
     let todo = Todo {
+        name: key.to_string(),
         status: Status::InProgress,
         notes: String::from("no notes for now"),
     };
@@ -44,7 +46,7 @@ pub fn get_all_todos(db: &DB) -> Vec<Todo> {
     todos
 }
 
-pub fn complete_todo(db: &DB, key: &String) -> Result<(), &'static str>{
+pub fn complete_todo(db: &DB, key: &String) -> Result<(), &'static str> {
     let res = db.get(key).unwrap();
     if res.is_none() {
         return Err("Todo with this name does not exist");
@@ -59,13 +61,21 @@ pub fn complete_todo(db: &DB, key: &String) -> Result<(), &'static str>{
     Ok(())
 }
 
-pub fn delete_todo(db: &DB, key: &String) -> Result<(), &'static str>{
+pub fn delete_todo(db: &DB, key: &String) -> Result<(), &'static str> {
     let res = db.get(key).unwrap();
     if res.is_none() {
         return Err("Todo with this name does not exist");
     }
 
     db.delete(&key).unwrap();
+
+    Ok(())
+}
+
+pub fn drop_db(path: &str) -> std::io::Result<()> {
+    let _ = DB::destroy(&Options::default(), path);
+
+    fs::remove_dir_all(path)?;
 
     Ok(())
 }

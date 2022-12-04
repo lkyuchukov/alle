@@ -13,9 +13,10 @@ fn test_add_todo() {
         let result = add_todo(&db, &key);
         assert_eq!(true, result.is_ok());
 
-        let db_value = String::from_utf8(db.get(key).unwrap().unwrap()).unwrap();
+        let db_value = String::from_utf8(db.get(&key).unwrap().unwrap()).unwrap();
         let todo: Todo = serde_json::from_str(&db_value).unwrap();
         matches!(todo.status, Status::InProgress);
+        assert_eq!(todo.name, key.to_string());
         assert_eq!(todo.notes, String::from("no notes for now"));
     }
 
@@ -60,9 +61,11 @@ fn test_get_all_todos() {
 
         let todo1 = todos.get(1).unwrap();
         matches!(todo1.status, Status::Done);
+        assert_eq!(todo1.name, key1.to_string());
         assert_eq!(todo1.notes, notes1);
 
         let todo2 = todos.get(0).unwrap();
+        assert_eq!(todo2.name, key2.to_string());
         matches!(todo2.status, Status::InProgress);
         assert_eq!(todo2.notes, notes2)
     }
@@ -84,9 +87,10 @@ fn test_complete_todo() {
         let result = complete_todo(&db, &key);
         assert_eq!(true, result.is_ok());
 
-        let db_value = String::from_utf8(db.get(key).unwrap().unwrap()).unwrap();
+        let db_value = String::from_utf8(db.get(&key).unwrap().unwrap()).unwrap();
         let todo: Todo = serde_json::from_str(&db_value).unwrap();
 
+        assert_eq!(todo.name, key.to_string());
         matches!(todo.status, Status::InProgress);
         assert_eq!(todo.notes, String::from("whatever"));
     }
@@ -149,14 +153,9 @@ fn test_delete_missing_todo() {
     let _ = DB::destroy(&Options::default(), path);
 }
 
-// #[test]
-// fn destroy_db() {
-//     let path = "/tmp";
-//     let _ = DB::destroy(&Options::default(), path);
-// }
-
 fn insert_todo(db: &DB, key: &String, status: Status, notes: &String) {
     let todo1 = Todo {
+        name: key.to_string(),
         status,
         notes: notes.to_string(),
     };
