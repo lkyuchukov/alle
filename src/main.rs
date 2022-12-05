@@ -1,6 +1,8 @@
 use clap::{arg, Command};
 use rocksdb::DB;
-use tman::{add_todo, complete_todo, delete_todo, drop_db, get_all_todos, uncomplete_todo};
+use tman::{
+    add_todo_note, add_todo, complete_todo, delete_todo, drop_db, get_all_todos, uncomplete_todo,
+};
 
 fn main() {
     let binding = dirs::home_dir().unwrap();
@@ -31,6 +33,13 @@ fn main() {
         Some(("uncomplete", sub_matches)) => {
             let key = sub_matches.get_one::<String>("NAME").expect("required");
             if let Err(e) = uncomplete_todo(&db, &key) {
+                println!("{}", e);
+            }
+        }
+        Some(("note", sub_matches)) => {
+            let key = sub_matches.get_one::<String>("NAME").expect("required");
+            let note = sub_matches.get_one::<String>("NOTE").expect("required");
+            if let Err(e) = add_todo_note(&db, &key, &note) {
                 println!("{}", e);
             }
         }
@@ -73,6 +82,14 @@ fn cli() -> Command {
             Command::new("uncomplete")
                 .about("Uncomplete a TODO")
                 .arg(arg!(<NAME> "The name of the todo"))
+                .arg_required_else_help(true),
+        )
+        .subcommand(
+            Command::new("note")
+                .about("Change the note for a given TODO")
+                .arg(arg!(<NAME> "The name of the todo"))
+                .arg_required_else_help(true)
+                .arg(arg!(<NOTE> "The note to add"))
                 .arg_required_else_help(true),
         )
         .subcommand(
