@@ -1,6 +1,9 @@
 use rocksdb::{Options, DB};
-use tman::{add_todo, complete_todo, delete_todo, get_all_todos, Status, Todo, uncomplete_todo, add_todo_note};
 use serial_test::serial;
+use tman::{
+    add_todo, add_todo_note, add_todo_tag, complete_todo, delete_todo, get_all_todos,
+    remove_todo_tag, uncomplete_todo, Status, Todo,
+};
 
 #[test]
 #[serial(timeout_ms = 1000)]
@@ -17,12 +20,11 @@ fn test_add_todo() {
         let todo: Todo = serde_json::from_str(&db_value).unwrap();
         matches!(todo.status, Status::InProgress);
         assert_eq!(todo.name, key.to_string());
-        assert_eq!(todo.notes, String::from("no notes for now"));
+        assert_eq!(todo.note, String::from(""));
+        assert_eq!(0, todo.tags.len())
     }
 
     let _ = DB::destroy(&Options::default(), path);
-
-    // generate some good names for a terminal todo app
 }
 
 #[test]
@@ -33,10 +35,17 @@ fn test_add_todo_already_exists() {
         let db = DB::open_default(path).unwrap();
 
         let key = String::from("foo");
-        insert_todo(&db, &key, Status::InProgress, &String::from("no notes this time"));
+        let tags = Vec::new();
+        insert_todo(
+            &db,
+            &key,
+            Status::InProgress,
+            &String::from("no notes this time"),
+            &tags,
+        );
 
         let result = add_todo(&db, &key);
-        assert_eq!(false, result.is_ok());
+        assert_eq!(true, result.is_err());
         assert_eq!(result.err().unwrap(), "Todo with this name already exists");
     }
 
@@ -52,11 +61,15 @@ fn test_get_all_todos() {
 
         let key1 = String::from("foo");
         let notes1 = String::from("random notes");
-        insert_todo(&db, &key1, Status::InProgress, &notes1);
+        let mut tags1: Vec<String> = Vec::new();
+        tags1.push(String::from("another tag"));
+        insert_todo(&db, &key1, Status::InProgress, &notes1, &tags1);
 
         let key2 = String::from("bar");
         let notes2 = String::from("random notes again");
-        insert_todo(&db, &key2, Status::Done, &notes2);
+        let mut tags2: Vec<String> = Vec::new();
+        tags2.push(String::from("random tag"));
+        insert_todo(&db, &key2, Status::Done, &notes2, &tags2);
 
         let todos = get_all_todos(&db);
         assert_eq!(2, todos.len());
@@ -64,12 +77,13 @@ fn test_get_all_todos() {
         let todo1 = todos.get(1).unwrap();
         matches!(todo1.status, Status::Done);
         assert_eq!(todo1.name, key1.to_string());
-        assert_eq!(todo1.notes, notes1);
+        assert_eq!(todo1.note, notes1);
+        assert_eq!(todo1.tags, tags1);
 
         let todo2 = todos.get(0).unwrap();
         assert_eq!(todo2.name, key2.to_string());
         matches!(todo2.status, Status::InProgress);
-        assert_eq!(todo2.notes, notes2)
+        assert_eq!(todo2.tags, tags2)
     }
 
     let _ = DB::destroy(&Options::default(), path);
@@ -84,7 +98,8 @@ fn test_complete_todo() {
 
         let key = String::from("foo");
         let notes = String::from("whatever");
-        insert_todo(&db, &key, Status::InProgress, &notes);
+        let tags = Vec::new();
+        insert_todo(&db, &key, Status::InProgress, &notes, &tags);
 
         let result = complete_todo(&db, &key);
         assert_eq!(true, result.is_ok());
@@ -94,7 +109,7 @@ fn test_complete_todo() {
 
         assert_eq!(todo.name, key.to_string());
         matches!(todo.status, Status::InProgress);
-        assert_eq!(todo.notes, String::from("whatever"));
+        assert_eq!(todo.note, String::from("whatever"));
     }
 
     let _ = DB::destroy(&Options::default(), path);
@@ -110,7 +125,7 @@ fn test_complete_missing_todo() {
         let key = String::from("foo");
 
         let result = complete_todo(&db, &key);
-        assert_eq!(false, result.is_ok());
+        assert_eq!(true, result.is_err());
         assert_eq!(result.err().unwrap(), "Todo with this name does not exist");
     }
 
@@ -126,7 +141,8 @@ fn test_uncomplete_todo() {
 
         let key = String::from("foo");
         let notes = String::from("whatever");
-        insert_todo(&db, &key, Status::Done, &notes);
+        let tags = Vec::new();
+        insert_todo(&db, &key, Status::Done, &notes, &tags);
 
         let result = uncomplete_todo(&db, &key);
         assert_eq!(true, result.is_ok());
@@ -136,7 +152,7 @@ fn test_uncomplete_todo() {
 
         assert_eq!(todo.name, key.to_string());
         matches!(todo.status, Status::InProgress);
-        assert_eq!(todo.notes, String::from("whatever"));
+        assert_eq!(todo.note, String::from("whatever"));
     }
 
     let _ = DB::destroy(&Options::default(), path);
@@ -152,7 +168,7 @@ fn test_uncomplete_missing_todo() {
         let key = String::from("foo");
 
         let result = uncomplete_todo(&db, &key);
-        assert_eq!(false, result.is_ok());
+        assert_eq!(true, result.is_err());
         assert_eq!(result.err().unwrap(), "Todo with this name does not exist");
     }
 
@@ -168,7 +184,8 @@ fn test_todo_note() {
 
         let key = String::from("foo");
         let notes = String::from("");
-        insert_todo(&db, &key, Status::Done, &notes);
+        let tags = Vec::new();
+        insert_todo(&db, &key, Status::Done, &notes, &tags);
 
         let new_note = String::from("new note");
         let result = add_todo_note(&db, &key, &new_note);
@@ -179,7 +196,7 @@ fn test_todo_note() {
 
         assert_eq!(todo.name, key.to_string());
         matches!(todo.status, Status::InProgress);
-        assert_eq!(todo.notes, String::from("new note"));
+        assert_eq!(todo.note, String::from("new note"));
     }
 
     let _ = DB::destroy(&Options::default(), path);
@@ -196,8 +213,154 @@ fn test_todo_note_with_missing_todo() {
         let note = String::from("random note");
 
         let result = add_todo_note(&db, &key, &note);
-        assert_eq!(false, result.is_ok());
+        assert_eq!(true, result.is_err());
         assert_eq!(result.err().unwrap(), "Todo with this name does not exist");
+    }
+
+    let _ = DB::destroy(&Options::default(), path);
+}
+
+#[test]
+#[serial(timeout_ms = 1000)]
+fn test_add_tag_to_todo() {
+    let path = "/tmp";
+    {
+        let db = DB::open_default(path).unwrap();
+
+        let key = String::from("foo");
+        let notes = String::from("");
+        let tags = Vec::new();
+        let tag = String::from("random tag");
+        insert_todo(&db, &key, Status::Done, &notes, &tags);
+
+        let result = add_todo_tag(&db, &key, &tag);
+        assert_eq!(true, result.is_ok());
+
+        let db_value = String::from_utf8(db.get(&key).unwrap().unwrap()).unwrap();
+        let todo: Todo = serde_json::from_str(&db_value).unwrap();
+
+        assert_eq!(todo.name, key.to_string());
+        matches!(todo.status, Status::InProgress);
+        assert_eq!(todo.note, String::from(""));
+        assert_eq!(1, todo.tags.len());
+        assert_eq!(&tag, todo.tags.get(0).unwrap())
+    }
+
+    let _ = DB::destroy(&Options::default(), path);
+}
+
+#[test]
+#[serial(timeout_ms = 1000)]
+fn test_add_tag_to_missing_todo() {
+    let path = "/tmp";
+    {
+        let db = DB::open_default(path).unwrap();
+
+        let key = String::from("foo");
+        let tag = String::from("random tag");
+
+        let result = add_todo_tag(&db, &key, &tag);
+        assert_eq!(true, result.is_err());
+        assert_eq!(result.err().unwrap(), "Todo with this name does not exist");
+    }
+
+    let _ = DB::destroy(&Options::default(), path);
+}
+
+#[test]
+#[serial(timeout_ms = 1000)]
+fn test_add_tag_that_already_exists_to_todo() {
+    let path = "/tmp";
+    {
+        let db = DB::open_default(path).unwrap();
+
+        let key = String::from("foo");
+        let notes = String::from("");
+        let mut tags = Vec::new();
+        let tag = String::from("randomt tag");
+        tags.push(tag.to_string());
+        insert_todo(&db, &key, Status::Done, &notes, &tags);
+
+        let result = add_todo_tag(&db, &key, &tag);
+        assert_eq!(true, result.is_err());
+        assert_eq!(
+            result.err().unwrap(),
+            "This tag is has already been added to this todo"
+        );
+    }
+
+    let _ = DB::destroy(&Options::default(), path);
+}
+
+#[test]
+#[serial(timeout_ms = 1000)]
+fn test_remove_todo_tag() {
+    let path = "/tmp";
+    {
+        let db = DB::open_default(path).unwrap();
+
+        let key = String::from("foo");
+        let notes = String::from("");
+        let mut tags = Vec::new();
+        let tag = String::from("random tag");
+        tags.push(tag.to_string());
+        insert_todo(&db, &key, Status::Done, &notes, &tags);
+
+        let result = remove_todo_tag(&db, &key, &tag);
+        assert_eq!(true, result.is_ok());
+
+        let db_value = String::from_utf8(db.get(&key).unwrap().unwrap()).unwrap();
+        let todo: Todo = serde_json::from_str(&db_value).unwrap();
+
+        assert_eq!(todo.name, key.to_string());
+        matches!(todo.status, Status::InProgress);
+        assert_eq!(todo.note, String::from(""));
+        assert_eq!(0, todo.tags.len());
+    }
+
+    let _ = DB::destroy(&Options::default(), path);
+}
+
+#[test]
+#[serial(timeout_ms = 1000)]
+fn test_remove_todo_tag_missing_todo() {
+    let path = "/tmp";
+    {
+        let db = DB::open_default(path).unwrap();
+
+        let key = String::from("foo");
+        let tag = String::from("random tag");
+
+        let result = remove_todo_tag(&db, &key, &tag);
+        assert_eq!(true, result.is_err());
+        assert_eq!(result.err().unwrap(), "Todo with this name does not exist");
+    }
+
+    let _ = DB::destroy(&Options::default(), path);
+}
+
+#[test]
+#[serial(timeout_ms = 1000)]
+fn test_remove_missing_todo_tag() {
+    let path = "/tmp";
+    {
+        let db = DB::open_default(path).unwrap();
+
+        let key = String::from("foo");
+        let notes = String::from("");
+        let mut tags = Vec::new();
+        let tag = String::from("random tag");
+        tags.push(tag.to_string());
+        insert_todo(&db, &key, Status::Done, &notes, &tags);
+
+        let missing_tag = String::from("missing tag");
+
+        let result = remove_todo_tag(&db, &key, &missing_tag);
+        assert_eq!(true, result.is_err());
+        assert_eq!(
+            result.err().unwrap(),
+            "This tag does not exist for this todo"
+        );
     }
 
     let _ = DB::destroy(&Options::default(), path);
@@ -212,7 +375,8 @@ fn test_delete_todo() {
 
         let key = String::from("foo");
         let notes = String::from("whatever");
-        insert_todo(&db, &key, Status::InProgress, &notes);
+        let tags = Vec::new();
+        insert_todo(&db, &key, Status::InProgress, &notes, &tags);
 
         let result = delete_todo(&db, &key);
         assert_eq!(true, result.is_ok());
@@ -234,18 +398,19 @@ fn test_delete_missing_todo() {
         let key = String::from("foo");
 
         let result = delete_todo(&db, &key);
-        assert_eq!(false, result.is_ok());
+        assert_eq!(true, result.is_err());
         assert_eq!(result.err().unwrap(), "Todo with this name does not exist");
     }
 
     let _ = DB::destroy(&Options::default(), path);
 }
 
-fn insert_todo(db: &DB, key: &String, status: Status, notes: &String) {
+fn insert_todo(db: &DB, key: &String, status: Status, notes: &String, tags: &Vec<String>) {
     let todo1 = Todo {
         name: key.to_string(),
         status,
-        notes: notes.to_string(),
+        note: notes.to_string(),
+        tags: tags.to_vec(),
     };
     let serialized = serde_json::to_string(&todo1).unwrap();
     db.put(&key, serialized).unwrap();

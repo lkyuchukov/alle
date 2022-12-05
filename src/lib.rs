@@ -7,7 +7,8 @@ use serde::{Deserialize, Serialize};
 pub struct Todo {
     pub name: String,
     pub status: Status,
-    pub notes: String,
+    pub note: String,
+    pub tags: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -25,7 +26,8 @@ pub fn add_todo(db: &DB, key: &String) -> Result<(), &'static str> {
     let todo = Todo {
         name: key.to_string(),
         status: Status::InProgress,
-        notes: String::from("no notes for now"),
+        note: String::from(""),
+        tags: Vec::new(),
     };
     let serialized = serde_json::to_string(&todo).unwrap();
     db.put(key, serialized).unwrap();
@@ -84,7 +86,46 @@ pub fn add_todo_note(db: &DB, key: &String, note: &String) -> Result<(), &'stati
     let val = String::from_utf8(res.unwrap()).unwrap();
 
     let mut todo: Todo = serde_json::from_str(&val).unwrap();
-    todo.notes = note.to_string();
+    todo.note = note.to_string();
+    let serialized = serde_json::to_string(&todo).unwrap();
+    db.put(key, serialized).unwrap();
+
+    Ok(())
+}
+
+pub fn add_todo_tag(db: &DB, key: &String, tag: &String) -> Result<(), &'static str> {
+    let res = db.get(&key).unwrap();
+    if res.is_none() {
+        return Err("Todo with this name does not exist");
+    }
+    let val = String::from_utf8(res.unwrap()).unwrap();
+
+    let mut todo: Todo = serde_json::from_str(&val).unwrap();
+
+    if todo.tags.contains(tag) {
+        return Err("This tag is has already been added to this todo");
+    }
+
+    todo.tags.push(tag.to_string());
+    let serialized = serde_json::to_string(&todo).unwrap();
+    db.put(key, serialized).unwrap();
+
+    Ok(())
+}
+
+pub fn remove_todo_tag(db: &DB, key: &String, tag: &String) -> Result<(), &'static str> {
+    let res = db.get(&key).unwrap();
+    if res.is_none() {
+        return Err("Todo with this name does not exist");
+    }
+    let val = String::from_utf8(res.unwrap()).unwrap();
+
+    let mut todo: Todo = serde_json::from_str(&val).unwrap();
+    if !todo.tags.contains(tag) {
+        return Err("This tag does not exist for this todo");
+    }
+
+    todo.tags.retain(|t| t != tag);
     let serialized = serde_json::to_string(&todo).unwrap();
     db.put(key, serialized).unwrap();
 
