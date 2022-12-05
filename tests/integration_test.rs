@@ -1,5 +1,5 @@
 use rocksdb::{Options, DB};
-use tman::{add_todo, complete_todo, delete_todo, get_all_todos, Status, Todo};
+use tman::{add_todo, complete_todo, delete_todo, get_all_todos, Status, Todo, uncomplete_todo};
 use serial_test::serial;
 
 #[test]
@@ -110,6 +110,48 @@ fn test_complete_missing_todo() {
         let key = String::from("foo");
 
         let result = complete_todo(&db, &key);
+        assert_eq!(false, result.is_ok());
+        assert_eq!(result.err().unwrap(), "Todo with this name does not exist");
+    }
+
+    let _ = DB::destroy(&Options::default(), path);
+}
+
+#[test]
+#[serial(timeout_ms = 1000)]
+fn test_uncomplete_todo() {
+    let path = "/tmp";
+    {
+        let db = DB::open_default(path).unwrap();
+
+        let key = String::from("foo");
+        let notes = String::from("whatever");
+        insert_todo(&db, &key, Status::Done, &notes);
+
+        let result = uncomplete_todo(&db, &key);
+        assert_eq!(true, result.is_ok());
+
+        let db_value = String::from_utf8(db.get(&key).unwrap().unwrap()).unwrap();
+        let todo: Todo = serde_json::from_str(&db_value).unwrap();
+
+        assert_eq!(todo.name, key.to_string());
+        matches!(todo.status, Status::InProgress);
+        assert_eq!(todo.notes, String::from("whatever"));
+    }
+
+    let _ = DB::destroy(&Options::default(), path);
+}
+
+#[test]
+#[serial(timeout_ms = 1000)]
+fn test_uncomplete_missing_todo() {
+    let path = "/tmp";
+    {
+        let db = DB::open_default(path).unwrap();
+
+        let key = String::from("foo");
+
+        let result = uncomplete_todo(&db, &key);
         assert_eq!(false, result.is_ok());
         assert_eq!(result.err().unwrap(), "Todo with this name does not exist");
     }

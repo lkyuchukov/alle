@@ -61,6 +61,21 @@ pub fn complete_todo(db: &DB, key: &String) -> Result<(), &'static str> {
     Ok(())
 }
 
+pub fn uncomplete_todo(db: &DB, key: &String) -> Result<(), &'static str> {
+    let res = db.get(key).unwrap();
+    if res.is_none() {
+        return Err("Todo with this name does not exist");
+    }
+    let val = String::from_utf8(res.unwrap()).unwrap();
+
+    let mut todo: Todo = serde_json::from_str(&val).unwrap();
+    todo.status = Status::InProgress;
+    let serialized = serde_json::to_string(&todo).unwrap();
+    db.put(key, serialized).unwrap();
+
+    Ok(())
+}
+
 pub fn delete_todo(db: &DB, key: &String) -> Result<(), &'static str> {
     let res = db.get(key).unwrap();
     if res.is_none() {

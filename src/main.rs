@@ -1,6 +1,6 @@
 use clap::{arg, Command};
-use rocksdb::{DB};
-use tman::{add_todo, complete_todo, delete_todo, drop_db, get_all_todos};
+use rocksdb::DB;
+use tman::{add_todo, complete_todo, delete_todo, drop_db, get_all_todos, uncomplete_todo};
 
 fn main() {
     let binding = dirs::home_dir().unwrap();
@@ -25,6 +25,12 @@ fn main() {
         Some(("complete", sub_matches)) => {
             let key = sub_matches.get_one::<String>("NAME").expect("required");
             if let Err(e) = complete_todo(&db, &key) {
+                println!("{}", e);
+            }
+        }
+        Some(("uncomplete", sub_matches)) => {
+            let key = sub_matches.get_one::<String>("NAME").expect("required");
+            if let Err(e) = uncomplete_todo(&db, &key) {
                 println!("{}", e);
             }
         }
@@ -60,6 +66,12 @@ fn cli() -> Command {
         .subcommand(
             Command::new("complete")
                 .about("Complete a TODO")
+                .arg(arg!(<NAME> "The name of the todo"))
+                .arg_required_else_help(true),
+        )
+        .subcommand(
+            Command::new("uncomplete")
+                .about("Uncomplete a TODO")
                 .arg(arg!(<NAME> "The name of the todo"))
                 .arg_required_else_help(true),
         )
