@@ -86,7 +86,40 @@ pub fn add_todo_note(db: &DB, key: &String, note: &String) -> Result<(), &'stati
     let val = String::from_utf8(res.unwrap()).unwrap();
 
     let mut todo: Todo = serde_json::from_str(&val).unwrap();
+    if !todo.note.is_empty() {
+        return Err("This todo already has a note");
+    }
     todo.note = note.to_string();
+    let serialized = serde_json::to_string(&todo).unwrap();
+    db.put(key, serialized).unwrap();
+
+    Ok(())
+}
+
+pub fn edit_todo_note(db: &DB, key: &String, new_note: &String) -> Result<(), &'static str> {
+    let res = db.get(&key).unwrap();
+    if res.is_none() {
+        return Err("Todo with this name does not exist");
+    }
+    let val = String::from_utf8(res.unwrap()).unwrap();
+
+    let mut todo: Todo = serde_json::from_str(&val).unwrap();
+    todo.note = new_note.to_string();
+    let serialized = serde_json::to_string(&todo).unwrap();
+    db.put(key, serialized).unwrap();
+
+    Ok(())
+}
+
+pub fn remove_todo_note(db: &DB, key: &String) -> Result<(), &'static str> {
+    let res = db.get(&key).unwrap();
+    if res.is_none() {
+        return Err("Todo with this name does not exist");
+    }
+    let val = String::from_utf8(res.unwrap()).unwrap();
+
+    let mut todo: Todo = serde_json::from_str(&val).unwrap();
+    todo.note = String::from("");
     let serialized = serde_json::to_string(&todo).unwrap();
     db.put(key, serialized).unwrap();
 

@@ -1,7 +1,8 @@
 use clap::{arg, Command};
 use rocksdb::DB;
 use tman::{
-    add_todo_note, add_todo, complete_todo, delete_todo, drop_db, get_all_todos, uncomplete_todo, add_todo_tag, remove_todo_tag,
+    add_todo, add_todo_note, add_todo_tag, complete_todo, delete_todo, drop_db, get_all_todos,
+    remove_todo_tag, uncomplete_todo, edit_todo_note, remove_todo_note,
 };
 
 fn main() {
@@ -36,10 +37,23 @@ fn main() {
                 println!("{}", e);
             }
         }
-        Some(("note", sub_matches)) => {
+        Some(("add-note", sub_matches)) => {
             let key = sub_matches.get_one::<String>("NAME").expect("required");
             let note = sub_matches.get_one::<String>("NOTE").expect("required");
             if let Err(e) = add_todo_note(&db, &key, &note) {
+                println!("{}", e);
+            }
+        }
+        Some(("edit-note", sub_matches)) => {
+            let key = sub_matches.get_one::<String>("NAME").expect("required");
+            let new_note = sub_matches.get_one::<String>("NOTE").expect("required");
+            if let Err(e) = edit_todo_note(&db, &key, &new_note) {
+                println!("{}", e);
+            }
+        }
+        Some(("remove-note", sub_matches)) => {
+            let key = sub_matches.get_one::<String>("NAME").expect("required");
+            if let Err(e) = remove_todo_note(&db, &key) {
                 println!("{}", e);
             }
         }
@@ -99,12 +113,24 @@ fn cli() -> Command {
                 .arg_required_else_help(true),
         )
         .subcommand(
-            Command::new("note")
-                .about("Change the note for a given TODO")
+            Command::new("add-note")
+                .about("Add a note for a given TODO")
                 .arg(arg!(<NAME> "The name of the todo"))
                 .arg_required_else_help(true)
                 .arg(arg!(<NOTE> "The note to add"))
                 .arg_required_else_help(true),
+        )
+        .subcommand(
+            Command::new("edit-note")
+                .about("Edit the note for a given TODO")
+                .arg(arg!(<NAME> "The name of the todo"))
+                .arg_required_else_help(true)
+        )
+        .subcommand(
+            Command::new("remove-note")
+                .about("Remove the note for a given TODO")
+                .arg(arg!(<NAME> "The name of the todo"))
+                .arg_required_else_help(true)
         )
         .subcommand(
             Command::new("add-tag")
