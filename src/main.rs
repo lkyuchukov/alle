@@ -2,12 +2,12 @@ use clap::{arg, Command};
 use comfy_table::{
     modifiers::{UTF8_ROUND_CORNERS, UTF8_SOLID_INNER_BORDERS},
     presets::UTF8_FULL,
-    Table,
+    Cell, Color, Table,
 };
 use rocksdb::DB;
 use tman::{
     add_todo, add_todo_note, add_todo_tag, complete_todo, delete_todo, drop_db, edit_todo_note,
-    get_all_todos, remove_todo_note, remove_todo_tag, uncomplete_todo,
+    get_all_todos, remove_todo_note, remove_todo_tag, uncomplete_todo, Status,
 };
 
 fn main() {
@@ -34,11 +34,16 @@ fn main() {
 
             let todos = get_all_todos(&db);
             for todo in todos {
+                let name = Cell::new(todo.name);
+                let cell = match todo.status {
+                    Status::InProgress => Cell::new(todo.status.to_string()).fg(Color::Red),
+                    Status::Done => Cell::new(todo.status.to_string()).fg(Color::Green),
+                };
                 table.add_row(vec![
-                    todo.name,
-                    todo.status.to_string(),
-                    todo.note,
-                    todo.tags.join(", "),
+                    name,
+                    cell,
+                    Cell::new(todo.note),
+                    Cell::new(todo.tags.join(", ")),
                 ]);
             }
 
