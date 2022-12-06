@@ -1,7 +1,11 @@
+mod cli;
+
 use std::{fs, str::from_utf8};
 
 use rocksdb::{IteratorMode, Options, DB};
 use serde::{Deserialize, Serialize};
+
+pub use cli::cli;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Todo {

@@ -1,4 +1,3 @@
-use clap::{arg, Command};
 use comfy_table::{
     modifiers::{UTF8_ROUND_CORNERS, UTF8_SOLID_INNER_BORDERS},
     presets::UTF8_FULL,
@@ -7,7 +6,7 @@ use comfy_table::{
 use rocksdb::DB;
 use tman::{
     add_todo, add_todo_note, add_todo_tag, complete_todo, delete_todo, drop_db, edit_todo_note,
-    get_all_todos, remove_todo_note, remove_todo_tag, uncomplete_todo, Status,
+    get_all_todos, remove_todo_note, remove_todo_tag, uncomplete_todo, Status, cli,
 };
 
 fn main() {
@@ -109,74 +108,4 @@ fn main() {
         }
         _ => unreachable!(),
     }
-}
-
-fn cli() -> Command {
-    Command::new("todo")
-        .version("0.1")
-        .about("Terminal TODO manager")
-        .subcommand_required(true)
-        .arg_required_else_help(true)
-        .subcommand(
-            Command::new("add")
-                .about("Add a TODO")
-                .arg(arg!(<NAME> "The name of the todo"))
-                .arg_required_else_help(true),
-        )
-        .subcommand(Command::new("list").about("List all TODOs"))
-        .subcommand(
-            Command::new("complete")
-                .about("Complete a TODO")
-                .arg(arg!(<NAME> "The name of the todo"))
-                .arg_required_else_help(true),
-        )
-        .subcommand(
-            Command::new("uncomplete")
-                .about("Uncomplete a TODO")
-                .arg(arg!(<NAME> "The name of the todo"))
-                .arg_required_else_help(true),
-        )
-        .subcommand(
-            Command::new("add-note")
-                .about("Add a note for a given TODO")
-                .arg(arg!(<NAME> "The name of the todo"))
-                .arg_required_else_help(true)
-                .arg(arg!(<NOTE> "The note to add"))
-                .arg_required_else_help(true),
-        )
-        .subcommand(
-            Command::new("edit-note")
-                .about("Edit the note for a given TODO")
-                .arg(arg!(<NAME> "The name of the todo"))
-                .arg_required_else_help(true),
-        )
-        .subcommand(
-            Command::new("remove-note")
-                .about("Remove the note for a given TODO")
-                .arg(arg!(<NAME> "The name of the todo"))
-                .arg_required_else_help(true),
-        )
-        .subcommand(
-            Command::new("add-tag")
-                .about("Add a tag to a given TODO")
-                .arg(arg!(<NAME> "The name of the todo"))
-                .arg_required_else_help(true)
-                .arg(arg!(<TAG> "The tag to add"))
-                .arg_required_else_help(true),
-        )
-        .subcommand(
-            Command::new("remove-tag")
-                .about("Remove a tag from a given TODO")
-                .arg(arg!(<NAME> "The name of the todo"))
-                .arg_required_else_help(true)
-                .arg(arg!(<TAG> "The tag to remove"))
-                .arg_required_else_help(true),
-        )
-        .subcommand(
-            Command::new("delete")
-                .about("Delete a TODO")
-                .arg(arg!(<NAME> "The name of the todo"))
-                .arg_required_else_help(true),
-        )
-        .subcommand(Command::new("drop-db").about("Drops the database of TODOs"))
 }
