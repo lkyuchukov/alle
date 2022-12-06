@@ -19,7 +19,7 @@ fn test_add_todo() {
 
         let db_value = String::from_utf8(db.get(&key).unwrap().unwrap()).unwrap();
         let todo: Todo = serde_json::from_str(&db_value).unwrap();
-        matches!(todo.status, Status::InProgress);
+        matches!(todo.status, Status::ToDo);
         assert_eq!(todo.name, key.to_string());
         assert_eq!(todo.note, String::from(""));
         assert_eq!(0, todo.tags.len())
@@ -40,7 +40,7 @@ fn test_add_todo_already_exists() {
         insert_todo(
             &db,
             &key,
-            Status::InProgress,
+            Status::ToDo,
             &String::from("no notes this time"),
             &tags,
         );
@@ -64,7 +64,7 @@ fn test_get_all_todos() {
         let note1 = String::from("random notes");
         let mut tags1: Vec<String> = Vec::new();
         tags1.push(String::from("another tag"));
-        insert_todo(&db, &key1, Status::InProgress, &note1, &tags1);
+        insert_todo(&db, &key1, Status::ToDo, &note1, &tags1);
 
         let key2 = String::from("bar");
         let note2 = String::from("random notes again");
@@ -83,7 +83,7 @@ fn test_get_all_todos() {
 
         let todo2 = todos.get(0).unwrap();
         assert_eq!(todo2.name, key2.to_string());
-        matches!(todo2.status, Status::InProgress);
+        matches!(todo2.status, Status::ToDo);
         assert_eq!(todo2.tags, tags2)
     }
 
@@ -100,7 +100,7 @@ fn test_complete_todo() {
         let key = String::from("foo");
         let note = String::from("whatever");
         let tags = Vec::new();
-        insert_todo(&db, &key, Status::InProgress, &note, &tags);
+        insert_todo(&db, &key, Status::ToDo, &note, &tags);
 
         let result = complete_todo(&db, &key);
         assert_eq!(true, result.is_ok());
@@ -109,7 +109,7 @@ fn test_complete_todo() {
         let todo: Todo = serde_json::from_str(&db_value).unwrap();
 
         assert_eq!(todo.name, key.to_string());
-        matches!(todo.status, Status::InProgress);
+        matches!(todo.status, Status::ToDo);
         assert_eq!(todo.note, String::from("whatever"));
     }
 
@@ -152,7 +152,7 @@ fn test_uncomplete_todo() {
         let todo: Todo = serde_json::from_str(&db_value).unwrap();
 
         assert_eq!(todo.name, key.to_string());
-        matches!(todo.status, Status::InProgress);
+        matches!(todo.status, Status::ToDo);
         assert_eq!(todo.note, String::from("whatever"));
     }
 
@@ -196,7 +196,7 @@ fn test_add_todo_note() {
         let todo: Todo = serde_json::from_str(&db_value).unwrap();
 
         assert_eq!(todo.name, key.to_string());
-        matches!(todo.status, Status::InProgress);
+        matches!(todo.status, Status::ToDo);
         assert_eq!(todo.note, String::from("new note"));
     }
 
@@ -261,7 +261,7 @@ fn test_edit_todo_note() {
         let todo: Todo = serde_json::from_str(&db_value).unwrap();
 
         assert_eq!(todo.name, key.to_string());
-        matches!(todo.status, Status::InProgress);
+        matches!(todo.status, Status::ToDo);
         assert_eq!(todo.note, String::from("new note"));
     }
 
@@ -305,7 +305,7 @@ fn test_remove_todo_note() {
         let todo: Todo = serde_json::from_str(&db_value).unwrap();
 
         assert_eq!(todo.name, key.to_string());
-        matches!(todo.status, Status::InProgress);
+        matches!(todo.status, Status::ToDo);
         assert_eq!(todo.note, String::from(""));
     }
 
@@ -349,7 +349,7 @@ fn test_add_tag_to_todo() {
         let todo: Todo = serde_json::from_str(&db_value).unwrap();
 
         assert_eq!(todo.name, key.to_string());
-        matches!(todo.status, Status::InProgress);
+        matches!(todo.status, Status::ToDo);
         assert_eq!(todo.note, String::from(""));
         assert_eq!(1, todo.tags.len());
         assert_eq!(&tag, todo.tags.get(0).unwrap())
@@ -422,7 +422,7 @@ fn test_remove_todo_tag() {
         let todo: Todo = serde_json::from_str(&db_value).unwrap();
 
         assert_eq!(todo.name, key.to_string());
-        matches!(todo.status, Status::InProgress);
+        matches!(todo.status, Status::ToDo);
         assert_eq!(todo.note, String::from(""));
         assert_eq!(0, todo.tags.len());
     }
@@ -485,7 +485,7 @@ fn test_delete_todo() {
         let key = String::from("foo");
         let notes = String::from("whatever");
         let tags = Vec::new();
-        insert_todo(&db, &key, Status::InProgress, &notes, &tags);
+        insert_todo(&db, &key, Status::ToDo, &notes, &tags);
 
         let result = delete_todo(&db, &key);
         assert_eq!(true, result.is_ok());

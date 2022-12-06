@@ -13,14 +13,14 @@ pub struct Todo {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum Status {
-    InProgress,
+    ToDo,
     Done,
 }
 
 impl ToString for Status {
     fn to_string(&self) -> String {
         match self {
-            Status::InProgress => String::from("In Progress"),
+            Status::ToDo => String::from("To Do"),
             Status::Done => String::from("Done"),
         }
     }
@@ -34,7 +34,7 @@ pub fn add_todo(db: &DB, key: &String) -> Result<(), &'static str> {
 
     let todo = Todo {
         name: key.to_string(),
-        status: Status::InProgress,
+        status: Status::ToDo,
         note: String::from(""),
         tags: Vec::new(),
     };
@@ -80,7 +80,7 @@ pub fn uncomplete_todo(db: &DB, key: &String) -> Result<(), &'static str> {
     let val = String::from_utf8(res.unwrap()).unwrap();
 
     let mut todo: Todo = serde_json::from_str(&val).unwrap();
-    todo.status = Status::InProgress;
+    todo.status = Status::ToDo;
     let serialized = serde_json::to_string(&todo).unwrap();
     db.put(key, serialized).unwrap();
 

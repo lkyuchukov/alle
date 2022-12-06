@@ -35,7 +35,7 @@ fn main() {
             for todo in todos {
                 let name = Cell::new(todo.name);
                 let cell = match todo.status {
-                    Status::InProgress => Cell::new(todo.status.to_string()).fg(Color::Red),
+                    Status::ToDo => Cell::new(todo.status.to_string()).fg(Color::Red),
                     Status::Done => Cell::new(todo.status.to_string()).fg(Color::Green),
                 };
                 table.add_row(vec![
