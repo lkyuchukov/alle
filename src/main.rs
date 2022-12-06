@@ -1,8 +1,13 @@
 use clap::{arg, Command};
+use comfy_table::{
+    modifiers::{UTF8_ROUND_CORNERS, UTF8_SOLID_INNER_BORDERS},
+    presets::UTF8_FULL,
+    Table,
+};
 use rocksdb::DB;
 use tman::{
-    add_todo, add_todo_note, add_todo_tag, complete_todo, delete_todo, drop_db, get_all_todos,
-    remove_todo_tag, uncomplete_todo, edit_todo_note, remove_todo_note,
+    add_todo, add_todo_note, add_todo_tag, complete_todo, delete_todo, drop_db, edit_todo_note,
+    get_all_todos, remove_todo_note, remove_todo_tag, uncomplete_todo,
 };
 
 fn main() {
@@ -20,10 +25,24 @@ fn main() {
             }
         }
         Some(("list", _)) => {
+            let mut table = Table::new();
+            table
+                .load_preset(UTF8_FULL)
+                .apply_modifier(UTF8_SOLID_INNER_BORDERS)
+                .apply_modifier(UTF8_ROUND_CORNERS)
+                .set_header(vec!["Name", "Status", "Note", "Tags"]);
+
             let todos = get_all_todos(&db);
             for todo in todos {
-                println!("{:?}", todo);
+                table.add_row(vec![
+                    todo.name,
+                    todo.status.to_string(),
+                    todo.note,
+                    todo.tags.join(", "),
+                ]);
             }
+
+            println!("{table}");
         }
         Some(("complete", sub_matches)) => {
             let key = sub_matches.get_one::<String>("NAME").expect("required");
@@ -124,13 +143,13 @@ fn cli() -> Command {
             Command::new("edit-note")
                 .about("Edit the note for a given TODO")
                 .arg(arg!(<NAME> "The name of the todo"))
-                .arg_required_else_help(true)
+                .arg_required_else_help(true),
         )
         .subcommand(
             Command::new("remove-note")
                 .about("Remove the note for a given TODO")
                 .arg(arg!(<NAME> "The name of the todo"))
-                .arg_required_else_help(true)
+                .arg_required_else_help(true),
         )
         .subcommand(
             Command::new("add-tag")

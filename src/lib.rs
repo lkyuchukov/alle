@@ -17,6 +17,15 @@ pub enum Status {
     Done,
 }
 
+impl ToString for Status {
+    fn to_string(&self) -> String {
+        match self {
+            Status::InProgress => String::from("In Progress"),
+            Status::Done => String::from("Done"),
+        }
+    }
+}
+
 pub fn add_todo(db: &DB, key: &String) -> Result<(), &'static str> {
     let res = db.get(key).unwrap();
     if res.is_some() {
