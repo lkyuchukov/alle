@@ -1,5 +1,6 @@
 use std::{str::from_utf8, fs};
 
+use chrono::{NaiveDate};
 use rocksdb::{DB, IteratorMode, Options};
 use serde::{Serialize, Deserialize};
 
@@ -7,6 +8,7 @@ use serde::{Serialize, Deserialize};
 pub struct Todo {
     pub name: String,
     pub status: Status,
+    pub due_date: String,
     pub note: String,
     pub tags: Vec<String>,
 }
@@ -35,6 +37,7 @@ pub fn add_todo(db: &DB, key: &String) -> Result<(), &'static str> {
     let todo = Todo {
         name: key.to_string(),
         status: Status::ToDo,
+        due_date: String::from(""),
         note: String::from(""),
         tags: Vec::new(),
     };
@@ -173,6 +176,65 @@ pub fn remove_todo_tag(db: &DB, key: &String, tag: &String) -> Result<(), &'stat
 
     Ok(())
 }
+
+pub fn add_due_date(db: &DB, key: &String, date: &String) -> Result<(), &'static str> { 
+    let date = NaiveDate::parse_from_str(date, "%d-%m-%Y");
+    if date.is_err() {
+        return Err("Invalid date format");
+    }
+
+    let res = db.get(&key).unwrap();
+    if res.is_none() {
+        return Err("Todo with this name does not exist");
+    } 
+
+    let val = String::from_utf8(res.unwrap()).unwrap();
+
+    let mut todo: Todo = serde_json::from_str(&val).unwrap();
+    todo.due_date = date.unwrap().format("%d-%m-%Y").to_string();
+    let serialized = serde_json::to_string(&todo).unwrap();
+    db.put(key, serialized).unwrap();
+
+    Ok(())
+}
+
+pub fn change_due_date(db: &DB, key: &String, new_date: &String) -> Result<(), &'static str> { 
+    let date = NaiveDate::parse_from_str(new_date, "%d-%m-%Y");
+    if date.is_err() {
+        return Err("Invalid date format");
+    }
+
+    let res = db.get(&key).unwrap();
+    if res.is_none() {
+        return Err("Todo with this name does not exist");
+    } 
+
+    let val = String::from_utf8(res.unwrap()).unwrap();
+
+    let mut todo: Todo = serde_json::from_str(&val).unwrap();
+    todo.due_date = date.unwrap().format("%d-%m-%Y").to_string();
+    let serialized = serde_json::to_string(&todo).unwrap();
+    db.put(key, serialized).unwrap();
+
+    Ok(())
+}
+
+pub fn remove_due_date(db: &DB, key: &String) -> Result<(), &'static str> { 
+    let res = db.get(&key).unwrap();
+    if res.is_none() {
+        return Err("Todo with this name does not exist");
+    } 
+
+    let val = String::from_utf8(res.unwrap()).unwrap();
+
+    let mut todo: Todo = serde_json::from_str(&val).unwrap();
+    todo.due_date = String::from("");
+    let serialized = serde_json::to_string(&todo).unwrap();
+    db.put(key, serialized).unwrap();
+
+    Ok(())
+}
+
 
 pub fn delete_todo(db: &DB, key: &String) -> Result<(), &'static str> {
     let res = db.get(key).unwrap();

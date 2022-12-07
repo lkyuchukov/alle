@@ -1,4 +1,4 @@
-use clap::{Command, arg};
+use clap::{arg, Command};
 
 pub fn cli() -> Command {
     Command::new("todo")
@@ -59,6 +59,28 @@ pub fn cli() -> Command {
                 .arg(arg!(<NAME> "The name of the todo"))
                 .arg_required_else_help(true)
                 .arg(arg!(<TAG> "The tag to remove"))
+                .arg_required_else_help(true),
+        )
+        .subcommand(
+            Command::new("add-due-date")
+                .about("Add a due date to a given TODO")
+                .arg(arg!(<NAME> "The name of the todo"))
+                .arg_required_else_help(true)
+                .arg(arg!(<DATE> "The date to add"))
+                .arg_required_else_help(true),
+        )
+        .subcommand(
+            Command::new("change-due-date")
+                .about("Change the due date for a given TODO")
+                .arg(arg!(<NAME> "The name of the todo"))
+                .arg_required_else_help(true)
+                .arg(arg!(<DATE> "The date to add"))
+                .arg_required_else_help(true),
+        )
+        .subcommand(
+            Command::new("remove-due-date")
+                .about("Remove the due date from a given TODO")
+                .arg(arg!(<NAME> "The name of the todo"))
                 .arg_required_else_help(true),
         )
         .subcommand(

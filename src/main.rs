@@ -5,8 +5,10 @@ use comfy_table::{
 };
 use rocksdb::DB;
 use tman::{
-    add_todo, add_todo_note, add_todo_tag, complete_todo, delete_todo, drop_db, edit_todo_note,
-    get_all_todos, remove_todo_note, remove_todo_tag, uncomplete_todo, Status, cli,
+    add_todo, add_todo_note, add_todo_tag, cli, complete_todo, delete_todo, drop_db,
+    edit_todo_note, get_all_todos, remove_todo_note, remove_todo_tag,
+    todo::{add_due_date, change_due_date, remove_due_date},
+    uncomplete_todo, Status,
 };
 
 fn main() {
@@ -29,18 +31,18 @@ fn main() {
                 .load_preset(UTF8_FULL)
                 .apply_modifier(UTF8_SOLID_INNER_BORDERS)
                 .apply_modifier(UTF8_ROUND_CORNERS)
-                .set_header(vec!["Name", "Status", "Note", "Tags"]);
+                .set_header(vec!["Name", "Status", "Due Date", "Note", "Tags"]);
 
             let todos = get_all_todos(&db);
             for todo in todos {
-                let name = Cell::new(todo.name);
-                let cell = match todo.status {
+                let status = match todo.status {
                     Status::ToDo => Cell::new(todo.status.to_string()).fg(Color::Red),
                     Status::Done => Cell::new(todo.status.to_string()).fg(Color::Green),
                 };
                 table.add_row(vec![
-                    name,
-                    cell,
+                    Cell::new(todo.name),
+                    status,
+                    Cell::new(todo.due_date),
                     Cell::new(todo.note),
                     Cell::new(todo.tags.join(", ")),
                 ]);
@@ -91,6 +93,26 @@ fn main() {
             let key = sub_matches.get_one::<String>("NAME").expect("required");
             let tag = sub_matches.get_one::<String>("TAG").expect("required");
             if let Err(e) = remove_todo_tag(&db, &key, &tag) {
+                println!("{}", e);
+            }
+        }
+        Some(("add-due-date", sub_matches)) => {
+            let key = sub_matches.get_one::<String>("NAME").expect("required");
+            let date = sub_matches.get_one::<String>("DATE").expect("required");
+            if let Err(e) = add_due_date(&db, &key, &date) {
+                println!("{}", e);
+            }
+        }
+        Some(("change-due-date", sub_matches)) => {
+            let key = sub_matches.get_one::<String>("NAME").expect("required");
+            let date = sub_matches.get_one::<String>("DATE").expect("required");
+            if let Err(e) = change_due_date(&db, &key, &date) {
+                println!("{}", e);
+            }
+        }
+        Some(("remove-due-date", sub_matches)) => {
+            let key = sub_matches.get_one::<String>("NAME").expect("required");
+            if let Err(e) = remove_due_date(&db, &key) {
                 println!("{}", e);
             }
         }
