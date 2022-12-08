@@ -1,5 +1,4 @@
 use rocksdb::{Options, DB};
-use serial_test::serial;
 use alle::todo::{self, add_due_date, change_due_date, remove_due_date};
 use todo::{
     add_todo, add_todo_note, add_todo_tag, complete_todo, delete_todo, edit_todo_note,
@@ -7,7 +6,6 @@ use todo::{
 };
 
 #[test]
-#[serial(timeout_ms = 1000)]
 fn test_add_todo_with_no_args() {
     let path = "/tmp";
     {
@@ -31,7 +29,6 @@ fn test_add_todo_with_no_args() {
 }
 
 #[test]
-#[serial(timeout_ms = 1000)]
 fn test_add_todo_with_note_and_due_date_args() {
     let path = "/tmp";
     {
@@ -59,7 +56,6 @@ fn test_add_todo_with_note_and_due_date_args() {
 }
 
 #[test]
-#[serial(timeout_ms = 1000)]
 fn test_add_todo_already_exists() {
     let path = "/tmp";
     {
@@ -88,7 +84,6 @@ fn test_add_todo_already_exists() {
 }
 
 #[test]
-#[serial(timeout_ms = 1000)]
 fn test_add_todo_invalid_due_date() {
     let path = "/tmp";
     {
@@ -107,7 +102,6 @@ fn test_add_todo_invalid_due_date() {
 }
 
 #[test]
-#[serial(timeout_ms = 1000)]
 fn test_list_all_todos_with_no_flags() {
     let path = "/tmp";
     {
@@ -148,7 +142,6 @@ fn test_list_all_todos_with_no_flags() {
 }
 
 #[test]
-#[serial(timeout_ms = 1000)]
 fn test_list_all_todos_with_flags() {
     let path = "/tmp";
     {
@@ -186,7 +179,6 @@ fn test_list_all_todos_with_flags() {
 }
 
 #[test]
-#[serial(timeout_ms = 1000)]
 fn test_complete_todo() {
     let path = "/tmp";
     {
@@ -213,7 +205,6 @@ fn test_complete_todo() {
 }
 
 #[test]
-#[serial(timeout_ms = 1000)]
 fn test_complete_missing_todo() {
     let path = "/tmp";
     {
@@ -230,7 +221,6 @@ fn test_complete_missing_todo() {
 }
 
 #[test]
-#[serial(timeout_ms = 1000)]
 fn test_uncomplete_todo() {
     let path = "/tmp";
     {
@@ -257,7 +247,6 @@ fn test_uncomplete_todo() {
 }
 
 #[test]
-#[serial(timeout_ms = 1000)]
 fn test_uncomplete_missing_todo() {
     let path = "/tmp";
     {
@@ -274,7 +263,6 @@ fn test_uncomplete_missing_todo() {
 }
 
 #[test]
-#[serial(timeout_ms = 1000)]
 fn test_add_todo_note() {
     let path = "/tmp";
     {
@@ -302,7 +290,6 @@ fn test_add_todo_note() {
 }
 
 #[test]
-#[serial(timeout_ms = 1000)]
 fn test_add_todo_note_with_existing_note() {
     let path = "/tmp";
     {
@@ -323,7 +310,6 @@ fn test_add_todo_note_with_existing_note() {
 }
 
 #[test]
-#[serial(timeout_ms = 1000)]
 fn test_add_todo_note_with_missing_todo() {
     let path = "/tmp";
     {
@@ -341,7 +327,6 @@ fn test_add_todo_note_with_missing_todo() {
 }
 
 #[test]
-#[serial(timeout_ms = 1000)]
 fn test_edit_todo_note() {
     let path = "/tmp";
     {
@@ -369,7 +354,6 @@ fn test_edit_todo_note() {
 }
 
 #[test]
-#[serial(timeout_ms = 1000)]
 fn test_edit_todo_note_with_missing_todo() {
     let path = "/tmp";
     {
@@ -387,7 +371,6 @@ fn test_edit_todo_note_with_missing_todo() {
 }
 
 #[test]
-#[serial(timeout_ms = 1000)]
 fn test_remove_todo_note() {
     let path = "/tmp";
     {
@@ -414,7 +397,6 @@ fn test_remove_todo_note() {
 }
 
 #[test]
-#[serial(timeout_ms = 1000)]
 fn test_remove_todo_note_with_missing_todo() {
     let path = "/tmp";
     {
@@ -431,7 +413,6 @@ fn test_remove_todo_note_with_missing_todo() {
 }
 
 #[test]
-#[serial(timeout_ms = 1000)]
 fn test_add_tag_to_todo() {
     let path = "/tmp";
     {
@@ -461,7 +442,6 @@ fn test_add_tag_to_todo() {
 }
 
 #[test]
-#[serial(timeout_ms = 1000)]
 fn test_add_tag_to_missing_todo() {
     let path = "/tmp";
     {
@@ -479,7 +459,6 @@ fn test_add_tag_to_missing_todo() {
 }
 
 #[test]
-#[serial(timeout_ms = 1000)]
 fn test_add_tag_that_already_exists_to_todo() {
     let path = "/tmp";
     {
@@ -505,7 +484,6 @@ fn test_add_tag_that_already_exists_to_todo() {
 }
 
 #[test]
-#[serial(timeout_ms = 1000)]
 fn test_remove_todo_tag() {
     let path = "/tmp";
     {
@@ -535,7 +513,6 @@ fn test_remove_todo_tag() {
 }
 
 #[test]
-#[serial(timeout_ms = 1000)]
 fn test_remove_todo_tag_missing_todo() {
     let path = "/tmp";
     {
@@ -553,7 +530,6 @@ fn test_remove_todo_tag_missing_todo() {
 }
 
 #[test]
-#[serial(timeout_ms = 1000)]
 fn test_remove_missing_todo_tag() {
     let path = "/tmp";
     {
@@ -581,7 +557,6 @@ fn test_remove_missing_todo_tag() {
 }
 
 #[test]
-#[serial(timeout_ms = 1000)]
 fn test_add_due_date_for_todo() {
     let path = "/tmp";
     {
@@ -611,7 +586,6 @@ fn test_add_due_date_for_todo() {
 }
 
 #[test]
-#[serial(timeout_ms = 1000)]
 fn test_add_invalid_due_date_for_todo() {
     let path = "/tmp";
     {
@@ -633,7 +607,6 @@ fn test_add_invalid_due_date_for_todo() {
 }
 
 #[test]
-#[serial(timeout_ms = 1000)]
 fn test_add_due_date_for_missing_todo() {
     let path = "/tmp";
     {
@@ -650,7 +623,6 @@ fn test_add_due_date_for_missing_todo() {
 }
 
 #[test]
-#[serial(timeout_ms = 1000)]
 fn test_change_due_date_for_todo() {
     let path = "/tmp";
     {
@@ -680,7 +652,6 @@ fn test_change_due_date_for_todo() {
 }
 
 #[test]
-#[serial(timeout_ms = 1000)]
 fn test_change_invalid_due_date_for_todo() {
     let path = "/tmp";
     {
@@ -702,7 +673,6 @@ fn test_change_invalid_due_date_for_todo() {
 }
 
 #[test]
-#[serial(timeout_ms = 1000)]
 fn test_change_due_date_for_missing_todo() {
     let path = "/tmp";
     {
@@ -719,7 +689,6 @@ fn test_change_due_date_for_missing_todo() {
 }
 
 #[test]
-#[serial(timeout_ms = 1000)]
 fn test_remove_due_date_for_todo() {
     let path = "/tmp";
     {
@@ -748,7 +717,6 @@ fn test_remove_due_date_for_todo() {
 }
 
 #[test]
-#[serial(timeout_ms = 1000)]
 fn test_remove_due_date_for_missing_todo() {
     let path = "/tmp";
     {
@@ -765,7 +733,6 @@ fn test_remove_due_date_for_missing_todo() {
 }
 
 #[test]
-#[serial(timeout_ms = 1000)]
 fn test_delete_todo() {
     let path = "/tmp";
     {
@@ -788,7 +755,6 @@ fn test_delete_todo() {
 }
 
 #[test]
-#[serial(timeout_ms = 1000)]
 fn test_delete_missing_todo() {
     let path = "/tmp";
     {
@@ -825,7 +791,6 @@ fn insert_todo(
 
 #[test]
 #[ignore]
-#[serial(timeout_ms = 1000)]
 fn destroy_db() {
     let path = "/tmp";
     let _ = DB::destroy(&Options::default(), path);
