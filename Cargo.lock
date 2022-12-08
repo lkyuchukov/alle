@@ -3,6 +3,20 @@
 version = 3
 
 [[package]]
+name = "alle"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "clap",
+ "comfy-table",
+ "dirs",
+ "rocksdb",
+ "serde",
+ "serde_json",
+ "serial_test",
+]
+
+[[package]]
 name = "android_system_properties"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -981,20 +995,6 @@ dependencies = [
  "libc",
  "wasi 0.10.0+wasi-snapshot-preview1",
  "winapi",
-]
-
-[[package]]
-name = "tman"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "clap",
- "comfy-table",
- "dirs",
- "rocksdb",
- "serde",
- "serde_json",
- "serial_test",
 ]
 
 [[package]]

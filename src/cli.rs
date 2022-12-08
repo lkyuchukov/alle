@@ -1,7 +1,7 @@
 use clap::{arg, Command};
 
 pub fn cli() -> Command {
-    Command::new("tman")
+    Command::new("alle")
         .version("0.1")
         .about("Terminal TODO manager")
         .subcommand_required(true)

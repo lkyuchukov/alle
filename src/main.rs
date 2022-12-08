@@ -4,7 +4,7 @@ use comfy_table::{
     Cell, Color, Table,
 };
 use rocksdb::DB;
-use tman::{
+use alle::{
     add_due_date, add_todo, add_todo_note, add_todo_tag, change_due_date, cli, complete_todo,
     delete_todo, drop_db, edit_todo_note, get_all_todos, remove_due_date, remove_todo_note,
     remove_todo_tag, uncomplete_todo, Status,
@@ -12,7 +12,7 @@ use tman::{
 
 fn main() {
     let binding = dirs::home_dir().unwrap();
-    let path = binding.to_str().unwrap().to_string() + "/.tman";
+    let path = binding.to_str().unwrap().to_string() + "/.alle";
     let db = DB::open_default(&path).unwrap();
 
     let matches = cli().get_matches();
