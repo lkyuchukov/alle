@@ -1,5 +1,13 @@
 [package]
 name = "alle"
+authors = ["Lyubomir Kyuchukov"]
+license = "MIT"
+description = "A terminal manager for your TODOs"
+readme = "README.md"
+homepage = "https://github.com/lkyuchukov/alle"
+repository = "https://github.com/lkyuchukov/alle"
+keywords = ["cli", "todo"]
+categories = ["command-line-utilities"]
 version = "0.1.0"
 edition = "2021"
 

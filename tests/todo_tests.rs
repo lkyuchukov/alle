@@ -824,7 +824,7 @@ fn insert_todo(
 }
 
 #[test]
-// #[ignore]
+#[ignore]
 #[serial(timeout_ms = 1000)]
 fn destroy_db() {
     let path = "/tmp";
