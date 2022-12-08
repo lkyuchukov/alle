@@ -5,10 +5,9 @@ use comfy_table::{
 };
 use rocksdb::DB;
 use tman::{
-    add_todo, add_todo_note, add_todo_tag, cli, complete_todo, delete_todo, drop_db,
-    edit_todo_note, get_all_todos, remove_todo_note, remove_todo_tag,
-    todo::{add_due_date, change_due_date, remove_due_date},
-    uncomplete_todo, Status,
+    add_due_date, add_todo, add_todo_note, add_todo_tag, change_due_date, cli, complete_todo,
+    delete_todo, drop_db, edit_todo_note, get_all_todos, remove_due_date, remove_todo_note,
+    remove_todo_tag, uncomplete_todo, Status,
 };
 
 fn main() {
@@ -25,7 +24,10 @@ fn main() {
                 println!("{}", e);
             }
         }
-        Some(("list", _)) => {
+        Some(("list", sub_matches)) => {
+            let status_filter = sub_matches.get_one::<String>("status");
+
+            let tag_filter = sub_matches.get_one::<String>("tag");
             let mut table = Table::new();
             table
                 .load_preset(UTF8_FULL)
@@ -33,7 +35,7 @@ fn main() {
                 .apply_modifier(UTF8_ROUND_CORNERS)
                 .set_header(vec!["Name", "Status", "Due Date", "Note", "Tags"]);
 
-            let todos = get_all_todos(&db);
+            let todos = get_all_todos(&db, status_filter, tag_filter);
             for todo in todos {
                 let status = match todo.status {
                     Status::ToDo => Cell::new(todo.status.to_string()).fg(Color::Red),

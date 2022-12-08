@@ -57,7 +57,7 @@ fn test_add_todo_already_exists() {
 
 #[test]
 #[serial(timeout_ms = 1000)]
-fn test_get_all_todos() {
+fn test_list_all_todos_with_no_flags() {
     let path = "/tmp";
     {
         let db = DB::open_default(path).unwrap();
@@ -75,7 +75,10 @@ fn test_get_all_todos() {
         tags2.push(String::from("random tag"));
         insert_todo(&db, &key2, Status::Done, &due_date, &note2, &tags2);
 
-        let todos = get_all_todos(&db);
+        // initialize status filter to be Option<&String>
+        let status_filter: Option<&String> = None;
+        let tag_filter: Option<&String> = None;
+        let todos = get_all_todos(&db, status_filter, tag_filter);
         assert_eq!(2, todos.len());
 
         let todo1 = todos.get(1).unwrap();
@@ -88,6 +91,44 @@ fn test_get_all_todos() {
         assert_eq!(todo2.name, key2.to_string());
         matches!(todo2.status, Status::ToDo);
         assert_eq!(todo2.tags, tags2)
+    }
+
+    let _ = DB::destroy(&Options::default(), path);
+}
+
+#[test]
+#[serial(timeout_ms = 1000)]
+fn test_list_all_todos_with_flags() {
+    let path = "/tmp";
+    {
+        let db = DB::open_default(path).unwrap();
+
+        let key1 = String::from("foo");
+        let note1 = String::from("random notes");
+        let due_date = String::from("");
+        let mut tags1: Vec<String> = Vec::new();
+        tags1.push(String::from("awesome"));
+        insert_todo(&db, &key1, Status::ToDo, &due_date, &note1, &tags1);
+
+        let key2 = String::from("bar");
+        let note2 = String::from("random notes again");
+        let mut tags2: Vec<String> = Vec::new();
+        tags2.push(String::from("random tag"));
+        insert_todo(&db, &key2, Status::Done, &due_date, &note2, &tags2);
+
+        let todo_status = String::from("ToDo");
+        let status_filter: Option<&String> = Some(&todo_status);
+
+        let awesome_tag = String::from("awesome");
+        let tag_filter: Option<&String> = Some(&awesome_tag);
+        let todos = get_all_todos(&db, status_filter, tag_filter);
+        assert_eq!(1, todos.len());
+
+        let todo1 = todos.get(0).unwrap();
+        matches!(todo1.status, Status::Done);
+        assert_eq!(todo1.name, key1.to_string());
+        assert_eq!(todo1.note, note1);
+        assert_eq!(todo1.tags, tags1);
     }
 
     let _ = DB::destroy(&Options::default(), path);

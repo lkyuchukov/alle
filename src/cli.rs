@@ -1,7 +1,7 @@
 use clap::{arg, Command};
 
 pub fn cli() -> Command {
-    Command::new("todo")
+    Command::new("tman")
         .version("0.1")
         .about("Terminal TODO manager")
         .subcommand_required(true)
@@ -12,7 +12,14 @@ pub fn cli() -> Command {
                 .arg(arg!(<NAME> "The name of the todo"))
                 .arg_required_else_help(true),
         )
-        .subcommand(Command::new("list").about("List all TODOs"))
+        .subcommand(
+            Command::new("list")
+                .about("List all TODOs")
+                .arg(arg!(status: -s <STATUS>))
+                .arg_required_else_help(false)
+                .arg(arg!(tag: -t <TAG>))
+                .arg_required_else_help(false),
+        )
         .subcommand(
             Command::new("complete")
                 .about("Complete a TODO")

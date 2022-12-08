@@ -1,8 +1,11 @@
-use std::{str::from_utf8, fs};
+use std::{
+    fs,
+    str::{from_utf8, FromStr},
+};
 
-use chrono::{NaiveDate};
-use rocksdb::{DB, IteratorMode, Options};
-use serde::{Serialize, Deserialize};
+use chrono::NaiveDate;
+use rocksdb::{IteratorMode, Options, DB};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Todo {
@@ -13,7 +16,7 @@ pub struct Todo {
     pub tags: Vec<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub enum Status {
     ToDo,
     Done,
@@ -24,6 +27,18 @@ impl ToString for Status {
         match self {
             Status::ToDo => String::from("To Do"),
             Status::Done => String::from("Done"),
+        }
+    }
+}
+
+impl FromStr for Status {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "ToDo" => Ok(Status::ToDo),
+            "Done" => Ok(Status::Done),
+            _ => Err(format!("{} is not a valid status", s)),
         }
     }
 }
@@ -47,14 +62,29 @@ pub fn add_todo(db: &DB, key: &String) -> Result<(), &'static str> {
     Ok(())
 }
 
-pub fn get_all_todos(db: &DB) -> Vec<Todo> {
+pub fn get_all_todos(db: &DB, status: Option<&String>, tag: Option<&String>) -> Vec<Todo> {
     let iter = db.iterator(IteratorMode::Start);
-    let mut todos = Vec::new();
+    let mut todos: Vec<Todo> = Vec::new();
+
     for item in iter {
         let (_, todo) = item.unwrap();
         let todo = from_utf8(&todo).unwrap();
 
         todos.push(serde_json::from_str(todo).unwrap());
+    }
+
+    if status.is_some() {
+        let status = Status::from_str(status.unwrap()).unwrap();
+        if status == Status::Done {
+            todos.retain(|t| t.status == Status::Done)
+        } else if status == Status::ToDo {
+            todos.retain(|t| t.status == Status::ToDo)
+        }
+    }
+
+    if tag.is_some() {
+        let tag = tag.unwrap();
+        todos.retain(|t| t.tags.contains(&tag.to_string()));
     }
 
     todos
@@ -177,7 +207,7 @@ pub fn remove_todo_tag(db: &DB, key: &String, tag: &String) -> Result<(), &'stat
     Ok(())
 }
 
-pub fn add_due_date(db: &DB, key: &String, date: &String) -> Result<(), &'static str> { 
+pub fn add_due_date(db: &DB, key: &String, date: &String) -> Result<(), &'static str> {
     let date = NaiveDate::parse_from_str(date, "%d-%m-%Y");
     if date.is_err() {
         return Err("Invalid date format");
@@ -186,7 +216,7 @@ pub fn add_due_date(db: &DB, key: &String, date: &String) -> Result<(), &'static
     let res = db.get(&key).unwrap();
     if res.is_none() {
         return Err("Todo with this name does not exist");
-    } 
+    }
 
     let val = String::from_utf8(res.unwrap()).unwrap();
 
@@ -198,7 +228,7 @@ pub fn add_due_date(db: &DB, key: &String, date: &String) -> Result<(), &'static
     Ok(())
 }
 
-pub fn change_due_date(db: &DB, key: &String, new_date: &String) -> Result<(), &'static str> { 
+pub fn change_due_date(db: &DB, key: &String, new_date: &String) -> Result<(), &'static str> {
     let date = NaiveDate::parse_from_str(new_date, "%d-%m-%Y");
     if date.is_err() {
         return Err("Invalid date format");
@@ -207,7 +237,7 @@ pub fn change_due_date(db: &DB, key: &String, new_date: &String) -> Result<(), &
     let res = db.get(&key).unwrap();
     if res.is_none() {
         return Err("Todo with this name does not exist");
-    } 
+    }
 
     let val = String::from_utf8(res.unwrap()).unwrap();
 
@@ -219,11 +249,11 @@ pub fn change_due_date(db: &DB, key: &String, new_date: &String) -> Result<(), &
     Ok(())
 }
 
-pub fn remove_due_date(db: &DB, key: &String) -> Result<(), &'static str> { 
+pub fn remove_due_date(db: &DB, key: &String) -> Result<(), &'static str> {
     let res = db.get(&key).unwrap();
     if res.is_none() {
         return Err("Todo with this name does not exist");
-    } 
+    }
 
     let val = String::from_utf8(res.unwrap()).unwrap();
 
@@ -234,7 +264,6 @@ pub fn remove_due_date(db: &DB, key: &String) -> Result<(), &'static str> {
 
     Ok(())
 }
-
 
 pub fn delete_todo(db: &DB, key: &String) -> Result<(), &'static str> {
     let res = db.get(key).unwrap();
