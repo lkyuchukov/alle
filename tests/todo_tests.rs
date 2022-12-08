@@ -8,13 +8,15 @@ use todo::{
 
 #[test]
 #[serial(timeout_ms = 1000)]
-fn test_add_todo() {
+fn test_add_todo_with_no_args() {
     let path = "/tmp";
     {
         let db = DB::open_default(path).unwrap();
 
         let key = String::from("foo");
-        let result = add_todo(&db, &key);
+        let note_arg: Option<&String> = None;
+        let due_date_arg: Option<&String> = None;
+        let result = add_todo(&db, &key, note_arg, due_date_arg);
         assert_eq!(true, result.is_ok());
 
         let db_value = String::from_utf8(db.get(&key).unwrap().unwrap()).unwrap();
@@ -22,6 +24,34 @@ fn test_add_todo() {
         matches!(todo.status, Status::ToDo);
         assert_eq!(todo.name, key.to_string());
         assert_eq!(todo.note, String::from(""));
+        assert_eq!(0, todo.tags.len())
+    }
+
+    let _ = DB::destroy(&Options::default(), path);
+}
+
+#[test]
+#[serial(timeout_ms = 1000)]
+fn test_add_todo_with_note_and_due_date_args() {
+    let path = "/tmp";
+    {
+        let db = DB::open_default(path).unwrap();
+
+        let key = String::from("foo");
+        let note = String::from("whatever");
+        let note_arg: Option<&String> = Some(&note);
+
+        let due_date = String::from("17-07-2022");
+        let due_date_arg: Option<&String> = Some(&due_date);
+        let result = add_todo(&db, &key, note_arg, due_date_arg);
+        assert_eq!(true, result.is_ok());
+
+        let db_value = String::from_utf8(db.get(&key).unwrap().unwrap()).unwrap();
+        let todo: Todo = serde_json::from_str(&db_value).unwrap();
+        matches!(todo.status, Status::ToDo);
+        assert_eq!(todo.name, key.to_string());
+        assert_eq!(todo.note, note);
+        assert_eq!(todo.due_date, due_date);
         assert_eq!(0, todo.tags.len())
     }
 
@@ -47,9 +77,30 @@ fn test_add_todo_already_exists() {
             &tags,
         );
 
-        let result = add_todo(&db, &key);
+        let note_arg: Option<&String> = None;
+        let due_date_arg: Option<&String> = None;
+        let result = add_todo(&db, &key, note_arg, due_date_arg);
         assert_eq!(true, result.is_err());
         assert_eq!(result.err().unwrap(), "Todo with this name already exists");
+    }
+
+    let _ = DB::destroy(&Options::default(), path);
+}
+
+#[test]
+#[serial(timeout_ms = 1000)]
+fn test_add_todo_invalid_due_date() {
+    let path = "/tmp";
+    {
+        let db = DB::open_default(path).unwrap();
+
+        let key = String::from("foo");
+        let note_arg: Option<&String> = None;
+        let due_date = String::from("17-07-222022");
+        let due_date_arg: Option<&String> = Some(&due_date);
+        let result = add_todo(&db, &key, note_arg, due_date_arg);
+        assert_eq!(true, result.is_err());
+        assert_eq!(result.err().unwrap(), "Invalid date format");
     }
 
     let _ = DB::destroy(&Options::default(), path);
@@ -770,4 +821,12 @@ fn insert_todo(
     };
     let serialized = serde_json::to_string(&todo).unwrap();
     db.put(&key, serialized).unwrap();
+}
+
+#[test]
+// #[ignore]
+#[serial(timeout_ms = 1000)]
+fn destroy_db() {
+    let path = "/tmp";
+    let _ = DB::destroy(&Options::default(), path);
 }

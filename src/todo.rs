@@ -43,17 +43,36 @@ impl FromStr for Status {
     }
 }
 
-pub fn add_todo(db: &DB, key: &String) -> Result<(), &'static str> {
+pub fn add_todo(
+    db: &DB,
+    key: &String,
+    note_arg: Option<&String>,
+    due_date_arg: Option<&String>,
+) -> Result<(), &'static str> {
     let res = db.get(key).unwrap();
     if res.is_some() {
         return Err("Todo with this name already exists");
     }
 
+    let mut note = String::from("");
+    if note_arg.is_some() {
+        note = note_arg.unwrap().to_owned();
+    }
+
+    let mut due_date = String::from("");
+    if due_date_arg.is_some() {
+        if NaiveDate::parse_from_str(due_date_arg.unwrap(), "%d-%m-%Y").is_err() {
+            return Err("Invalid date format");
+        }
+
+        due_date = due_date_arg.unwrap().to_owned();
+    }
+
     let todo = Todo {
         name: key.to_string(),
         status: Status::ToDo,
-        due_date: String::from(""),
-        note: String::from(""),
+        due_date,
+        note,
         tags: Vec::new(),
     };
     let serialized = serde_json::to_string(&todo).unwrap();

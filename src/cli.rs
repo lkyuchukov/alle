@@ -10,7 +10,13 @@ pub fn cli() -> Command {
             Command::new("add")
                 .about("Add a TODO")
                 .arg(arg!(<NAME> "The name of the todo"))
-                .arg_required_else_help(true),
+                .arg_required_else_help(true)
+                .arg(arg!(note: -n <NOTE>))
+                .arg_required_else_help(false)
+                .arg(arg!(tag: -t <TAG>))
+                .arg_required_else_help(false)
+                .arg(arg!(due: -d <DUE_DATE>))
+                .arg_required_else_help(false),
         )
         .subcommand(
             Command::new("list")

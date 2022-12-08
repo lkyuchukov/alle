@@ -20,7 +20,11 @@ fn main() {
     match matches.subcommand() {
         Some(("add", sub_matches)) => {
             let key = sub_matches.get_one::<String>("NAME").expect("required");
-            if let Err(e) = add_todo(&db, &key) {
+
+            let note = sub_matches.get_one::<String>("note");
+            let due = sub_matches.get_one::<String>("due");
+
+            if let Err(e) = add_todo(&db, &key, note, due) {
                 println!("{}", e);
             }
         }
