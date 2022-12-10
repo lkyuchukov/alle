@@ -24,11 +24,39 @@ Commands:
 Options:
   -h, --help     Print help information
   -V, --version  Print version information
-  ```
+
+```
+
+```
+Usage: alle add [OPTIONS] <NAME>
+
+Arguments:
+  <NAME>  The name of the todo
+
+Options:
+  -n <NOTE>
+  -d <DUE_DATE>
+  -h, --help         Print help information
+
+```
+```
+Usage: alle list [OPTIONS]
+
+Options:
+  -s <STATUS>
+  -t <TAG>
+  -h, --help       Print help information
+```
 
 # Installation
 
 With cargo:
 ```
 cargo install alle
+```
+
+With homebrew:
+```
+brew tap lkyuchukov/alle
+brew install alle
 ```

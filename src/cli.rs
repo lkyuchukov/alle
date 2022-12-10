@@ -13,8 +13,6 @@ pub fn cli() -> Command {
                 .arg_required_else_help(true)
                 .arg(arg!(note: -n <NOTE>))
                 .arg_required_else_help(false)
-                .arg(arg!(tag: -t <TAG>))
-                .arg_required_else_help(false)
                 .arg(arg!(due: -d <DUE_DATE>))
                 .arg_required_else_help(false),
         )
